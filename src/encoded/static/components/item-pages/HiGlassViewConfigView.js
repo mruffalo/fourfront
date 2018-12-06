@@ -6,7 +6,7 @@ import _ from 'underscore';
 import { Button, Collapse, MenuItem, ButtonToolbar, DropdownButton } from 'react-bootstrap';
 import * as globals from './../globals';
 import Alerts from './../alerts';
-import { JWT, console, object, expFxn, ajax, Schemas, layout, fileUtil, isServerSide, DateUtility, navigate } from './../util';
+import { JWT, console, object, expFxn, ajax, Schemas, layout, fileUtil, isServerSide, DateUtility, navigate, getElementOffset } from './../util';
 import { FormattedInfoBlock, HiGlassPlainContainer, ItemDetailList, CollapsibleItemViewButtonToolbar } from './components';
 import { LinkToSelector } from './../forms/components';
 import DefaultItemView, { OverViewBodyItem } from './DefaultItemView';
@@ -62,6 +62,11 @@ export class HiGlassViewConfigTabView extends React.PureComponent {
         this.handleStatusChangeToRelease = this.handleStatusChange.bind(this, 'released');
         this.handleStatusChange = this.handleStatusChange.bind(this);
         this.addFileToHiglass = this.addFileToHiglass.bind(this);
+
+        this.refHiglass = null;
+        this.setHiglassRef = this.setHiglassRef.bind(this);
+        this.higlassComponentTop = null;
+        this.higlassComponentLeft = null;
 
         /**
          * @property {Object} viewConfig            The viewconf that is fed to HiGlassPlainContainer. (N.B.) HiGlassComponent may edit it in place during UI interactions.
@@ -130,6 +135,12 @@ export class HiGlassViewConfigTabView extends React.PureComponent {
     //
     //     initOriginalViewConfState();
     // }
+
+    componentDidMount(){
+        const offset = layout.getElementOffset(this.refHiglass);
+        this.higlassComponentTop = offset.top;
+        this.higlassComponentLeft = offset.left;
+    }
 
     havePermissionToEdit(){
         return !!(this.props.session && _.findWhere(this.props.context.actions || [], { 'name' : 'edit' }));
@@ -574,6 +585,10 @@ export class HiGlassViewConfigTabView extends React.PureComponent {
         );
     }
 
+    setHiglassRef(node) {
+        this.refHiglass = node;
+    }
+
     render(){
         var { isFullscreen, windowWidth, windowHeight, width } = this.props,
             { addFileLoading, genome_assembly } = this.state;
@@ -611,14 +626,15 @@ export class HiGlassViewConfigTabView extends React.PureComponent {
                 </h3>
                 <hr className="tab-section-title-horiz-divider"/>
                 <div className="higlass-tab-view-contents">
-                    <div className="higlass-container-container" style={isFullscreen ? { 'paddingLeft' : 10, 'paddingRight' : 10 } : null }>
+                    <div className="higlass-container-container" style={isFullscreen ? { 'paddingLeft' : 10, 'paddingRight' : 10 } : null } ref={this.setHiglassRef}>
                         <HiGlassPlainContainer {..._.omit(this.props, 'context', 'viewConfig')}
                             width={hiGlassComponentWidth}
                             height={hiGlassComponentHeight}
                             viewConfig={this.state.viewConfig}
-                            ref="higlass" />
+                            ref='higlass' />
                     </div>
                     { !isFullscreen ? this.extNonFullscreen() : null }
+                    <HiGlassResizeComponent higlassComponentTop={left} />
                 </div>
             </div>
         );
@@ -687,6 +703,38 @@ class AddFileButton extends React.PureComponent {
                 </Button>
                 <LinkToSelector isSelecting={isSelecting} onSelect={this.receiveFile} onCloseChildWindow={this.unsetIsSelecting} dropMessage={dropMessage} searchURL={searchURL} />
             </React.Fragment>
+        );
+    }
+}
+
+class HiGlassResizeComponent extends React.PureComponent {
+
+    constructor(props){
+        super(props);
+
+        // TODO bind functions to this
+        this.gub = this.gub.bind(this);
+
+        this.higlassComponentTop = this.props.higlassComponentTop;
+        this.higlassComponentLeft = this.props.higlassComponentLeft;
+    }
+
+    gub(evt) {
+        evt.preventDefault();
+        console.log("Client: " + evt.clientX + "," + evt.clientY); // Relative to the browser window (so scrolling affects it)
+        console.log("Page: " + evt.pageX + "," + evt.pageY); // Relative to the rendered page
+        console.log("Screen: " + evt.screenX + "," + evt.screenY); // Monitor's position
+
+        // Get the location of the higlass component
+        //console.log(evt.target);
+        //console.log(evt.target.offsetTop);
+        //event.clientY - event.target.offsetTop
+        // TODO console.log(event.clientY - this.)
+    }
+
+    render(){
+        return (
+            <div key="higlass-resize" onMouseDown={this.gub}>HI!</div>
         );
     }
 }
