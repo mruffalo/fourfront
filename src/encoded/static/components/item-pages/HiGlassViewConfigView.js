@@ -85,7 +85,7 @@ export class HiGlassViewConfigTabView extends React.PureComponent {
             'cloneLoading'          : false,
             'releaseLoading'        : false,
             'addFileLoading'        : false,
-            'hiGlassComponentHeight' : props.height,
+            'higlassComponentHeight' : props.height,
             'higlassResizeTop'   : null,
             'higlassResizeLeft'  : null
         };
@@ -141,8 +141,10 @@ export class HiGlassViewConfigTabView extends React.PureComponent {
 
     componentDidMount(){
         const offset = layout.getElementOffset(this.refHiglass);
-        this.state.higlassComponentTop = offset.top;
-        this.state.higlassComponentLeft = offset.left;
+        this.setState({
+            'higlassComponentTop' : offset.top,
+            'higlassComponentLeft' : offset.left
+        });
     }
 
     havePermissionToEdit(){
@@ -593,21 +595,27 @@ export class HiGlassViewConfigTabView extends React.PureComponent {
     }
 
     resizeCallback(resizeX, resizeY){
-        console.log(resizeX - this.state.higlassComponentLeft);
-        console.log(resizeY - this.state.higlassComponentTop); // Subtract 10 as well for the border
+        //console.log(resizeX - this.state.higlassComponentLeft);
+        //console.log(resizeY - this.state.higlassComponentTop);
+
+        // Subtract 10 as well for the border
+        this.setState({
+            higlassComponentHeight : resizeY - this.state.higlassComponentTop - 10
+        }, () => {console.log("YES");});
     }
 
     render(){
         var { isFullscreen, windowWidth, windowHeight, width } = this.props,
-            { addFileLoading, genome_assembly, hiGlassComponentHeight } = this.state;
+            { addFileLoading, genome_assembly, higlassComponentHeight } = this.state;
 
-        const hiGlassComponentWidth = isFullscreen ? windowWidth : width + 20;
+        const higlassComponentWidth = isFullscreen ? windowWidth : width + 20;
 
         // Change the height of the HiGlass Component if it's fullscreen.
         if (isFullscreen) {
-            hiGlassComponentHeight = windowHeight -120;
+            higlassComponentHeight = windowHeight -120;
         }
 
+        console.log(higlassComponentHeight);
         return (
             <div className={"overflow-hidden tabview-container-fullscreen-capable" + (isFullscreen ? ' full-screen-view' : '')}>
                 <h3 className="tab-section-title">
@@ -630,8 +638,8 @@ export class HiGlassViewConfigTabView extends React.PureComponent {
                 <div className="higlass-tab-view-contents">
                     <div className="higlass-container-container" style={isFullscreen ? { 'paddingLeft' : 10, 'paddingRight' : 10 } : null } ref={this.setHiglassRef}>
                         <HiGlassPlainContainer {..._.omit(this.props, 'context', 'viewConfig')}
-                            width={hiGlassComponentWidth}
-                            height={hiGlassComponentHeight}
+                            width={higlassComponentWidth}
+                            height={higlassComponentHeight}
                             viewConfig={this.state.viewConfig}
                             ref='higlass' />
                         <HiGlassResizeComponent callback={this.resizeCallback} />
@@ -713,35 +721,42 @@ class HiGlassResizeComponent extends React.PureComponent {
 
     constructor(props){
         super(props);
-
-        // TODO bind functions to this
-        this.gub = this.gub.bind(this);
-
+        this.onPanStart = this.onPanStart.bind(this);
+        this.onPan = this.onPan.bind(this);
+        this.onPanEnd = this.onPanEnd.bind(this);
         this.mouseUpCallback = this.props.callback;
 
-        console.log("components set");
-        console.log(props);
+        this.state = {
+            x: null,
+            y: null,
+            dragging: false
+        }
     }
 
-    onMouseDown(evt) {
-        // TODO Track the
+    onPanStart(evt) {
+        this.state.dragging = true;
     }
 
-    gub(evt) {
-        evt.preventDefault();
+    onPan(evt) {
+        if (evt.clientX <= 0 || evt.clientY <= 0) {
+            return false;
+        }
+        this.setState({
+            x: evt.pageX,
+            y: evt.pageY
+        });
+    }
 
-        console.log("gub!");
-        // Get clientX and clientY
-        const clientX = evt.pageX;
-        const clientY = evt.pageY;
+    onPanEnd(evt) {
+        this.state.dragging = false;
 
         // Use callback function to pass info back
-        this.mouseUpCallback(clientX, clientY);
+        this.mouseUpCallback(this.state.x, this.state.y);
     }
 
     render(){
         return (
-            <div key="higlass-resize" onMouseDown={this.gub}>HI!</div>
+            <div key="higlass-resize" draggable={true} onDragStart={this.onPanStart} onDrag={this.onPan} onDragEnd={this.onPanEnd}>Drag to resize</div>
         );
     }
 }
