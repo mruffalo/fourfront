@@ -65,8 +65,7 @@ export class HiGlassViewConfigTabView extends React.PureComponent {
 
         this.refHiglass = null;
         this.setHiglassRef = this.setHiglassRef.bind(this);
-        this.higlassComponentTop = null;
-        this.higlassComponentLeft = null;
+        this.resizeCallback = this.resizeCallback.bind(this);
 
         /**
          * @property {Object} viewConfig            The viewconf that is fed to HiGlassPlainContainer. (N.B.) HiGlassComponent may edit it in place during UI interactions.
@@ -76,6 +75,7 @@ export class HiGlassViewConfigTabView extends React.PureComponent {
          * @property {boolean} cloneLoading         True if AJAX request is en route to clone Item.
          * @property {boolean} releaseLoading       True if AJAX request is en route to change Item status.
          * @property {boolean} addFileLoading          True if AJAX request is en route to add file to `state.viewConfig`.
+         TODO add notes for extra fields
          */
         this.state = {
             'viewConfig'            : props.viewConfig,
@@ -84,7 +84,10 @@ export class HiGlassViewConfigTabView extends React.PureComponent {
             'saveLoading'           : false,
             'cloneLoading'          : false,
             'releaseLoading'        : false,
-            'addFileLoading'        : false
+            'addFileLoading'        : false,
+            'hiGlassComponentHeight' : props.height,
+            'higlassResizeTop'   : null,
+            'higlassResizeLeft'  : null
         };
     }
 
@@ -138,8 +141,8 @@ export class HiGlassViewConfigTabView extends React.PureComponent {
 
     componentDidMount(){
         const offset = layout.getElementOffset(this.refHiglass);
-        this.higlassComponentTop = offset.top;
-        this.higlassComponentLeft = offset.left;
+        this.state.higlassComponentTop = offset.top;
+        this.state.higlassComponentLeft = offset.left;
     }
 
     havePermissionToEdit(){
@@ -589,21 +592,20 @@ export class HiGlassViewConfigTabView extends React.PureComponent {
         this.refHiglass = node;
     }
 
+    resizeCallback(resizeX, resizeY){
+        console.log(resizeX - this.state.higlassComponentLeft);
+        console.log(resizeY - this.state.higlassComponentTop); // Subtract 10 as well for the border
+    }
+
     render(){
         var { isFullscreen, windowWidth, windowHeight, width } = this.props,
-            { addFileLoading, genome_assembly } = this.state;
+            { addFileLoading, genome_assembly, hiGlassComponentHeight } = this.state;
 
         const hiGlassComponentWidth = isFullscreen ? windowWidth : width + 20;
 
-        // Setting the height of the HiGlass Component follows one of these rules:
-        // - If it's Fullscreen it should almost take up the entire window.
-        // - Set to a fixed height.
-        var hiGlassComponentHeight;
+        // Change the height of the HiGlass Component if it's fullscreen.
         if (isFullscreen) {
             hiGlassComponentHeight = windowHeight -120;
-        }
-        else {
-            hiGlassComponentHeight = 600;
         }
 
         return (
@@ -632,9 +634,9 @@ export class HiGlassViewConfigTabView extends React.PureComponent {
                             height={hiGlassComponentHeight}
                             viewConfig={this.state.viewConfig}
                             ref='higlass' />
+                        <HiGlassResizeComponent callback={this.resizeCallback} />
                     </div>
                     { !isFullscreen ? this.extNonFullscreen() : null }
-                    <HiGlassResizeComponent higlassComponentTop={left} />
                 </div>
             </div>
         );
@@ -715,21 +717,26 @@ class HiGlassResizeComponent extends React.PureComponent {
         // TODO bind functions to this
         this.gub = this.gub.bind(this);
 
-        this.higlassComponentTop = this.props.higlassComponentTop;
-        this.higlassComponentLeft = this.props.higlassComponentLeft;
+        this.mouseUpCallback = this.props.callback;
+
+        console.log("components set");
+        console.log(props);
+    }
+
+    onMouseDown(evt) {
+        // TODO Track the
     }
 
     gub(evt) {
         evt.preventDefault();
-        console.log("Client: " + evt.clientX + "," + evt.clientY); // Relative to the browser window (so scrolling affects it)
-        console.log("Page: " + evt.pageX + "," + evt.pageY); // Relative to the rendered page
-        console.log("Screen: " + evt.screenX + "," + evt.screenY); // Monitor's position
 
-        // Get the location of the higlass component
-        //console.log(evt.target);
-        //console.log(evt.target.offsetTop);
-        //event.clientY - event.target.offsetTop
-        // TODO console.log(event.clientY - this.)
+        console.log("gub!");
+        // Get clientX and clientY
+        const clientX = evt.pageX;
+        const clientY = evt.pageY;
+
+        // Use callback function to pass info back
+        this.mouseUpCallback(clientX, clientY);
     }
 
     render(){
