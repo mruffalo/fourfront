@@ -726,9 +726,10 @@ class HiGlassResizeComponent extends React.PureComponent {
         this.onPanEnd = this.onPanEnd.bind(this);
         this.mouseUpCallback = this.props.callback;
 
+        this.dragX = null;
+        this.dragY = null;
+
         this.state = {
-            x: null,
-            y: null,
             dragging: false
         }
     }
@@ -738,25 +739,26 @@ class HiGlassResizeComponent extends React.PureComponent {
     }
 
     onPan(evt) {
+        // If the mouse is offscreen, stop
         if (evt.clientX <= 0 || evt.clientY <= 0) {
             return false;
         }
-        this.setState({
-            x: evt.pageX,
-            y: evt.pageY
-        });
+
+        // Update the dragging location.
+        this.dragX = evt.pageX;
+        this.dragY = evt.pageY;
     }
 
     onPanEnd(evt) {
         this.state.dragging = false;
 
         // Use callback function to pass info back
-        this.mouseUpCallback(this.state.x, this.state.y);
+        this.mouseUpCallback(this.dragX, this.dragY);
     }
 
     render(){
         return (
-            <div key="higlass-resize" draggable={true} onDragStart={this.onPanStart} onDrag={this.onPan} onDragEnd={this.onPanEnd}>Drag to resize</div>
+            <div key="higlass-resize" draggable={true} onDragStart={this.onPanStart} onDrag={this.onPan} onDragEnd={this.onPanEnd}>Drag me to resize</div>
         );
     }
 }
