@@ -86,8 +86,9 @@ export class HiGlassViewConfigTabView extends React.PureComponent {
             'releaseLoading'        : false,
             'addFileLoading'        : false,
             'higlassComponentHeight' : props.height,
-            'higlassResizeTop'   : null,
-            'higlassResizeLeft'  : null
+            'higlassComponentWidth' : props.width,
+            'higlassResizeTop'   : null, // TODO do I ever use these?
+            'higlassResizeLeft'  : null // TODO do I ever use these?
         };
     }
 
@@ -594,28 +595,46 @@ export class HiGlassViewConfigTabView extends React.PureComponent {
         this.refHiglass = node;
     }
 
-    resizeCallback(resizeX, resizeY){
+    resizeCallback(resizeX, resizeY, resizeIconWidth){
         //console.log(resizeX - this.state.higlassComponentLeft);
         //console.log(resizeY - this.state.higlassComponentTop);
 
-        // Subtract 10 as well for the border
+        // Calculate the new height of the HiGlassComponent on the Y coordinates of the HiGlassComponent and the margin between the resize image.
+        var newHeight = resizeY - this.state.higlassComponentTop - 10;
+
+        // Calculate the new width of the HiGlassComponent using the X coordinates of the HiGlassComponent and the width of the resize image.
+        var newWidth = resizeX + resizeIconWidth - this.state.higlassComponentLeft;
+
+        // Maintain a minimum size.
+        if (newWidth < 100) {
+            newWidth = 100;
+        }
+        if (newHeight < 100) {
+            newHeight = 100;
+        }
+
+        // Set the width and height of the window.
         this.setState({
-            higlassComponentHeight : resizeY - this.state.higlassComponentTop - 10
+            higlassComponentWidth : newWidth,
+            higlassComponentHeight : newHeight
         }, () => {console.log("YES");});
     }
 
     render(){
         var { isFullscreen, windowWidth, windowHeight, width } = this.props,
-            { addFileLoading, genome_assembly, higlassComponentHeight } = this.state;
+            { addFileLoading, genome_assembly, higlassComponentHeight, higlassComponentWidth } = this.state;
 
-        const higlassComponentWidth = isFullscreen ? windowWidth : width + 20;
-
-        // Change the height of the HiGlass Component if it's fullscreen.
+        // Change the dimensions of the HiGlass Component if it's fullscreen.
         if (isFullscreen) {
             higlassComponentHeight = windowHeight -120;
+            higlassComponentWidth = windowWidth;
         }
 
-        console.log(higlassComponentHeight);
+        if (!higlassComponentWidth) {
+            higlassComponentWidth = windowWidth;
+        }
+
+        console.log(higlassComponentWidth);
         return (
             <div className={"overflow-hidden tabview-container-fullscreen-capable" + (isFullscreen ? ' full-screen-view' : '')}>
                 <h3 className="tab-section-title">
@@ -636,13 +655,13 @@ export class HiGlassViewConfigTabView extends React.PureComponent {
                 </h3>
                 <hr className="tab-section-title-horiz-divider"/>
                 <div className="higlass-tab-view-contents">
-                    <div className="higlass-container-container" style={isFullscreen ? { 'paddingLeft' : 10, 'paddingRight' : 10 } : null } ref={this.setHiglassRef}>
+                    <div className="higlass-container-container clearfix" style={isFullscreen ? { 'paddingLeft' : 10, 'paddingRight' : 10 } : null } ref={this.setHiglassRef}>
                         <HiGlassPlainContainer {..._.omit(this.props, 'context', 'viewConfig')}
                             width={higlassComponentWidth}
                             height={higlassComponentHeight}
                             viewConfig={this.state.viewConfig}
                             ref='higlass' />
-                        <HiGlassResizeComponent callback={this.resizeCallback} />
+                        <HiGlassResizeComponent callback={this.resizeCallback} parentWidth={higlassComponentWidth || 700}/>
                     </div>
                     { !isFullscreen ? this.extNonFullscreen() : null }
                 </div>
@@ -728,9 +747,11 @@ class HiGlassResizeComponent extends React.PureComponent {
 
         this.dragX = null;
         this.dragY = null;
-
+        //this.parentWidth = props.parentWidth;
+        console.log(this.props);
         this.state = {
-            dragging: false
+            dragging: false,
+            parentWidth : props.parentWidth
         }
     }
 
@@ -744,6 +765,9 @@ class HiGlassResizeComponent extends React.PureComponent {
             return false;
         }
 
+        // TODO: You should track the right edge of this element.
+        //const offset = layout.getElementOffset(this.refHiglass);
+
         // Update the dragging location.
         this.dragX = evt.pageX;
         this.dragY = evt.pageY;
@@ -752,13 +776,19 @@ class HiGlassResizeComponent extends React.PureComponent {
     onPanEnd(evt) {
         this.state.dragging = false;
 
-        // Use callback function to pass info back
-        this.mouseUpCallback(this.dragX, this.dragY);
+        // Use callback function to pass info back. We also need the width of this element.
+        this.mouseUpCallback(this.dragX, this.dragY, 100);
     }
 
     render(){
+
+        var spacingStyle = {
+            'position': 'relative',
+            'left': this.state.parentWidth
+        };
+
         return (
-            <div key="higlass-resize" draggable={true} onDragStart={this.onPanStart} onDrag={this.onPan} onDragEnd={this.onPanEnd}>Drag me to resize</div>
+            <div key="higlass-resize" style={spacingStyle} draggable={true} onDragStart={this.onPanStart} onDrag={this.onPan} onDragEnd={this.onPanEnd}>Drag me to resize</div>
         );
     }
 }
