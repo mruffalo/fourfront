@@ -43,8 +43,11 @@ class Modification(Item):
         if genomic_change:
             mod_name = mod_name + " " + genomic_change
         if target_of_mod:
-            target = request.embed(target_of_mod, '@@object')
-            mod_name = mod_name + " for " + target['display_title']
+            tstring = ''
+            for tf in target_of_mod:
+                target_props = request.embed(tf, '@@object')
+                tstring += ', {}'.format(target_props['display_title'])
+            mod_name = mod_name + " for " + tstring[2:]
         return mod_name
 
     @calculated_property(schema={
@@ -56,9 +59,12 @@ class Modification(Item):
                                 genomic_change=None, target_of_mod=None):
         mod_name = genomic_change if genomic_change else modification_type
         if target_of_mod:
-            target = request.embed(target_of_mod, '@@object').get('display_title')
-            target_short = target.split(' ')[0]
-            mod_name = target_short + ' ' + mod_name
+            tstring = ''
+            for t in target_of_mod:
+                target = request.embed(t, '@@object').get('display_title')
+                target_short = target.split(' ')[0]
+                tstring += ', {}'.format(target_short)
+            mod_name = tstring[2:] + ' ' + mod_name
         return mod_name
 
     @calculated_property(schema={
