@@ -57,7 +57,8 @@ class Modification(Item):
         mod_name = genomic_change if genomic_change else modification_type
         if target_of_mod:
             target = request.embed(target_of_mod, '@@object').get('display_title')
-            mod_name = target.replace('Gene:', '') + ' ' + mod_name
+            target_short = target.split(' ')[0]
+            mod_name = target_short + ' ' + mod_name
         return mod_name
 
     @calculated_property(schema={
