@@ -161,7 +161,7 @@ class Biosample(Item):  # CalculatedBiosampleSlims, CalculatedBiosampleSynonyms)
             raise "Biosource always needs type - why can't we find it"
 
         # we've got a single type of biosource
-        if cell_culture_details is not None:
+        if cell_culture_details:
             cell_culture = request.embed(cell_culture_details, '@@object')
             ds = cell_culture.get('differentiation_state')
             dt = cell_culture.get('differentiation_term')
