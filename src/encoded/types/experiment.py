@@ -377,7 +377,7 @@ class ExperimentCaptureC(Experiment):
     item_type = 'experiment_capture_c'
     schema = load_schema('encoded:schemas/experiment_capture_c.json')
     embedded_list = Experiment.embedded_list + ["digestion_enzyme.name",
-                                                "targeted_regions.target.target_summary",
+                                                "targeted_regions.target.display_title",
                                                 "targeted_regions.oligo_file.href"]
     name_key = 'accession'
 

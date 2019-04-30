@@ -26,7 +26,7 @@ class Modification(Item):
         'constructs.tags',
         'constructs.designed_to_target',
         'modified_regions.aliases',
-        'target_of_mod.target_summary'
+        'target_of_mod.display_title'
     ]
 
     @calculated_property(schema={
