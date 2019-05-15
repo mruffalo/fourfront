@@ -5,6 +5,7 @@ services:
     container_name: elasticsearch
     environment:
       - node.name=elasticsearch
+      - xpack.security.enabled=false
     volumes:
       - esdata:/usr/share/elasticsearch/data
     ports:
