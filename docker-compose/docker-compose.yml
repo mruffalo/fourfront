@@ -1,0 +1,31 @@
+version: '3'
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.16
+    container_name: elasticsearch
+    environment:
+      - node.name=elasticsearch
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+  db:
+    image: postgres:11
+    container_name: postgres
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_db:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+  fourfront:
+    image: mruffalo/fourfront
+    container_name: fourfront
+    stdin_open: true
+    tty: true
+
+volumes:
+  esdata:
+    driver: local
+  postgres_db:
+    driver: local
