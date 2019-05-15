@@ -1,0 +1,5 @@
+After starting with `docker-compose up`, run a shell in the container with
+
+    docker exec -it fourfront /bin/bash
+
+Then, can start the web app with `bin/pserve development.ini`
