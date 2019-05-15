@@ -13,7 +13,8 @@ services:
     image: postgres:11
     container_name: postgres
     environment:
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=fourfront_user
+      - POSTGRES_PASSWORD=fourfront_password
     volumes:
       - postgres_db:/var/lib/postgresql/data
     ports:
