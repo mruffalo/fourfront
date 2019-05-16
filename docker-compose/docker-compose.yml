@@ -25,6 +25,8 @@ services:
     container_name: fourfront
     stdin_open: true
     tty: true
+    ports:
+      - 6543:6543
 
 volumes:
   esdata:
